@@ -8,13 +8,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        /* Custom CSS for the fixed layout */
+        /* (*** All previous CSS styles remain here ***) */
+
         :root {
             --sidebar-width: 280px;
             --collapsed-width: 60px;
-            --header-vertical-padding: 1rem; /* New: Matches top/bottom padding of sidebar content */
-            --header-height: 58px; /* New: Adjusted height for a more compact look (approx 16px top + element + 16px bottom) */
-            --main-padding: 2rem; /* Horizontal padding for .main-content */
+            --header-vertical-padding: 1rem;
+            --header-height: 58px;
+            --main-padding: 2rem;
             --sidebar-bg: #f8f9fa;
             --main-bg: #fff;
         }
@@ -27,8 +28,8 @@
             overflow: hidden;
         }
 
-        /* 1. Sidebar Container (Unchanged) */
         .sidebar-container {
+            /* ... (Sidebar styles) ... */
             flex-shrink: 0;
             height: 100%;
             display: flex;
@@ -46,7 +47,7 @@
 
         .sidebar-toggle-area {
             position: absolute;
-            top: 1rem; /* 16px top margin */
+            top: 1rem;
             left: 0;
             width: var(--collapsed-width);
             height: auto;
@@ -55,7 +56,7 @@
 
         .sidebar-content {
             flex-grow: 1;
-            padding: var(--header-vertical-padding); /* Uses the same vertical padding */
+            padding: var(--header-vertical-padding);
             padding-left: var(--collapsed-width);
             height: 100%;
             overflow-y: auto;
@@ -67,10 +68,8 @@
             transition: opacity 0.3s ease-in-out;
         }
 
-        /* 2. Main Content Area (Fixed Height Logic) */
         .main-content {
             flex-grow: 1;
-            /* Changed vertical padding to use the header variable for consistency */
             padding: var(--header-vertical-padding) var(--main-padding);
             height: 100%;
             display: flex;
@@ -78,35 +77,23 @@
             overflow-y: hidden;
         }
 
-        /* 3. The Header Content */
         .header-content {
-            /* Now only uses vertical padding */
             padding-bottom: var(--header-vertical-padding);
-            padding-top: 0; /* No need for extra top padding, already in .main-content */
-            /* Using a flex-grow on the content instead of fixed height on the header */
+            padding-top: 0;
             flex-shrink: 0;
         }
 
-        /* 4. The Form Container (Needs dynamic height) */
         .form-wrapper {
-            /* 100vh - (top padding of .main-content) - (bottom padding of .main-content)
-               - (the height of the header row) - (the height of the hr line + its margin)
-               We approximate the header row height based on its padding and content.
-            */
-            /* Calculate height based on 100% of parent minus fixed elements */
             height: 100%;
             overflow-y: hidden;
-
-            /* Inner wrapper takes up remaining space and scrolls */
             display: flex;
             flex-direction: column;
         }
 
         .form-scroll-area {
-             /* 100% of .form-wrapper height, minus the hr margin (1rem + 0.5rem) */
             height: calc(100% - 1.5rem);
             overflow-y: auto;
-            padding-top: 0.5rem; /* Small space after the hr line */
+            padding-top: 0.5rem;
         }
 
         /* General Styling adjustments */
@@ -138,7 +125,7 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.2s;
-            cursor: pointer;
+            cursor: pointer; /* Ensure it looks clickable */
         }
 
         .profile-icon-btn:hover {
@@ -176,7 +163,6 @@
         .recent-item:hover {
             background-color: #e9ecef;
         }
-
     </style>
 </head>
 <body>
@@ -194,12 +180,14 @@
             <hr>
             <h6 class="text-secondary mb-3">Recent Reviewers</h6>
             <div class="list-group">
-                <a href="#" class="recent-item text-decoration-none text-dark" title="Review on Quantum Physics">
-                    <i class="bi bi-chat-text me-2"></i> Review on Quantum Physics
-                </a>
-                <a href="#" class="recent-item text-decoration-none text-dark" title="Review on Laravel Framework">
-                    <i class="bi bi-chat-text me-2"></i> Review on Laravel Framework
-                </a>
+                @auth
+                    @forelse ($recentReviews as $review)
+                        @empty
+                        <p class="text-muted small px-3">No recent reviews yet...</p>
+                    @endforelse
+                @else
+                    <p class="text-muted small px-3">Log in to save and manage...</p>
+                @endauth
             </div>
         </div>
     </div>
@@ -209,12 +197,17 @@
 
             <header class="header-content d-flex justify-content-between align-items-center">
                 <h2 class="fw-bold m-0 text-dark">reReview</h2>
-                <div class="profile-icon-btn">
-                    <i class="bi bi-person-circle fs-5"></i>
+
+                <div class="profile-icon-btn" data-bs-toggle="modal" data-bs-target="#authModal">
+                    @auth
+                        <i class="bi bi-person-check-fill fs-5 text-primary"></i>
+                    @else
+                        <i class="bi bi-person-circle fs-5"></i>
+                    @endauth
                 </div>
             </header>
 
-
+            <hr class="mt-0 mb-3">
 
             <div class="form-wrapper">
                 <div class="form-scroll-area">
@@ -251,6 +244,52 @@
         </div>
     </div>
 
+    <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="authModalLabel">Access Your Reviews</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    @auth
+                        <h6 class="fw-bold mb-3">Hello, {{ Auth::user()->name }}!</h6>
+                        <p class="text-secondary small">You are logged in. View your profile or log out.</p>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary">View Profile</a>
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-secondary w-100 mt-2">Log Out</button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{{ route('login') }}" class="btn btn-primary py-2 fw-bold">
+                                Sign In (Email/Password)
+                            </a>
+                        </div>
+
+                        <div class="text-center text-secondary small mb-3">
+                            OR
+                        </div>
+
+                        <div class="d-grid gap-2 mb-4">
+                            <a href="{{ route('socialite.redirect', 'google') }}" class="btn btn-outline-danger">
+                                <i class="bi bi-google me-2"></i> Continue with Google
+                            </a>
+                        </div>
+
+                        <p class="text-center small m-0">
+                            Don't have an account? <a href="{{ route('register') }}" class="fw-bold text-decoration-none">Create Account</a>
+                        </p>
+                    @endauth
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('sidebarToggle').addEventListener('click', function() {
