@@ -45,4 +45,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function reviewers()
+    {
+        // The foreign key 'user_id' in the 'reviewers' table is used here.
+        return $this->hasMany(Reviewer::class);
+    }
 }
