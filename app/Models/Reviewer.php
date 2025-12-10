@@ -16,6 +16,7 @@ class Reviewer extends Model
         'user_id',
         'summary',
         'questions',
+        'audio_path',
     ];
 
     // Casts ensure the data type is correct when retrieved from the database.

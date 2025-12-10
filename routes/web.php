@@ -25,6 +25,10 @@ Route::middleware('auth')->group(function () {
 
     // Display a saved review (Requires a showReview method in ReviewController)
     Route::get('/review/{review}', [ReviewController::class, 'showReview'])->name('review.show');
+
+    // NEW: Route to generate audio for a specific review
+    Route::post('/review/{id}/audio', [ReviewController::class, 'generateAudio'])->name('review.audio');
+
     // NOTE: Add the delete route too once you implement showReview
     Route::delete('/review/{reviewer}', [ReviewController::class, 'deleteReview'])->name('review.delete');
 

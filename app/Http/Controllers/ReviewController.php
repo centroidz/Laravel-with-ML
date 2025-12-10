@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Session; // 👈 NEW: Use Session Facade
 use App\ReviewerGenerator;
 use App\Models\Reviewer;
 use Illuminate\Support\Str;
+use Afaya\EdgeTTS\Service\EdgeTTS;
 
 use App\TrainableSummarizer;
 
@@ -20,6 +21,52 @@ class ReviewController extends Controller
     public function __construct()
     {
         // Add middleware here if needed, but it's already in web.php
+    }
+
+        // Generate the audio using Edge TTS
+    public function generateAudio($id)
+    {
+        $reviewer = Reviewer::findOrFail($id);
+
+        if (Auth::id() !== $reviewer->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // 1. Generate a random, unguessable filename
+        $randomName = Str::random(40); // e.g., 'aF3k9Lp...'
+        $fileName = $randomName . '.mp3';
+        $directory = public_path('audio');
+        
+        // 2. Prepare paths
+        $fullPath = $directory . '/' . $fileName;
+        $dbPath = 'audio/' . $fileName; // Relative path for DB
+
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        try {
+            $tts = new EdgeTTS();
+            
+            // 3. Generate Audio
+            $tts->synthesize($reviewer->summary, 'en-US-GuyNeural', [
+                'outputFormat' => 'audio-24khz-48kbitrate-mono-mp3'
+            ]);
+            
+            // 4. Save file (Note: toFile adds extension if missing, but we added it manually to control it)
+            // Since we added .mp3 to $fileName, verify if library adds it again. 
+            // Usually, toFile() just writes to the path provided.
+            $tts->toFile($directory . '/' . $randomName); 
+
+            // 5. Update Database
+            $reviewer->audio_path = $dbPath;
+            $reviewer->save();
+
+            return back()->with('success', 'Audio generated successfully!');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Audio generation failed: ' . $e->getMessage());
+        }
     }
 
     public function showForm()
@@ -50,7 +97,7 @@ class ReviewController extends Controller
 public function showReview($id)
 {
     // Fetch the Reviewer model explicitly by ID
-    $reviewer = Reviewer::findOrFail($id);
+    $reviewer = Reviewer::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
     // 1. Policy check: Ensure the authenticated user owns this review
     if (Auth::id() !== $reviewer->user_id) {
@@ -79,6 +126,7 @@ public function showReview($id)
         'original_text_length' => $reviewer->summary ? strlen($reviewer->summary) * 4 : 'N/A',
         'saved' => true,
         'is_show_view' => true,
+        'audio_path' => $reviewer->audio_path,
     ]);
 }
 
@@ -92,11 +140,23 @@ public function showReview($id)
             abort(403, 'Unauthorized action.');
         }
 
-        // 2. Delete the record
+        // 2. Delete the Audio File if it exists
+        // We check if the 'audio_path' column is not empty
+        if (!empty($reviewer->audio_path)) {
+            $filePath = public_path($reviewer->audio_path);
+            
+            // Check if the physical file exists on the server
+            if (file_exists($filePath)) {
+                // Delete the file
+                unlink($filePath);
+            }
+        }
+
+        // 3. Delete the record from Database
         $reviewer->delete();
 
-        // 3. Redirect back to the main form with a success message
-        return redirect()->route('review.form')->with('success', 'Review successfully deleted.');
+        // 4. Redirect back to the main form with a success message
+        return redirect()->route('review.form')->with('success', 'Review and audio successfully deleted.');
     }
 
 

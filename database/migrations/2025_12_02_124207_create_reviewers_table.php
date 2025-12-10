@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->longText('summary'); // To store the generated summary
             $table->longText('questions');
+            $table->string('audio_path')->nullable();
             $table->timestamps();
         });
     }
