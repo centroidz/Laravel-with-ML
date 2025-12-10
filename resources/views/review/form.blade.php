@@ -262,9 +262,9 @@
                                 <textarea class="form-control" name="input_text" id="input_text" rows="8" placeholder="Paste your study notes, article, or document here (Min 50 chars)">{{ old('input_text') }}</textarea>
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-4" style="display: none;">
                                 <label for="sentence_count" class="form-label fw-bold">Number of Sentences for Reviewer:</label>
-                                <input type="number" class="form-control" name="sentence_count" id="sentence_count" value="{{ old('sentence_count', 5) }}" min="1" max="20">
+                                <input type="number" class="form-control" name="sentence_count" id="sentence_count" value="{{ old('sentence_count', 5) }}" min="1" max="20" >
                                 <small class="form-text text-muted">This sets the length of the generated summary.</small>
                             </div>
 
