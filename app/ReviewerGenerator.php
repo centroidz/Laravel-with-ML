@@ -2,10 +2,9 @@
 
 namespace App;
 
-use PhpScience\TextRank\TextRankFacade;
-use PhpScience\TextRank\Tool\StopWords\English;
+// use PhpScience\TextRank\TextRankFacade;
+// use PhpScience\TextRank\Tool\StopWords\English;
 
-// NEW PACKAGE IMPORT for Tokenization
 use NlpTools\Tokenizers\WhitespaceTokenizer;
 
 class ReviewerGenerator
@@ -18,21 +17,21 @@ class ReviewerGenerator
     /**
      * Summarizes the raw text using the TextRank algorithm.
      */
-    public function generateReviewer(string $text, int $sentenceCount = 5): array
-    {
-        $textRank = new TextRankFacade();
-        $textRank->setStopWords(new English());
+    // public function generateReviewer(string $text, int $sentenceCount = 5): array
+    // {
+    //     $textRank = new TextRankFacade();
+    //     $textRank->setStopWords(new English());
 
-        // Using '1' for the summarization mode.
-        $rankedSentences = $textRank->summarizeTextFreely(
-            $text,
-            $sentenceCount,
-            $sentenceCount,
-            1
-        );
+    //     // Using '1' for the summarization mode.
+    //     $rankedSentences = $textRank->summarizeTextFreely(
+    //         $text,
+    //         $sentenceCount,
+    //         $sentenceCount,
+    //         1
+    //     );
 
-        return $rankedSentences;
-    }
+    //     return $rankedSentences;
+    // }
 
     /**
      * Generates questions based on the extracted key sentences.
@@ -47,8 +46,27 @@ class ReviewerGenerator
 
         // Simplified list of common "stop words" and non-keywords to ignore
         $stopWords = [
-            'the', 'a', 'an', 'is', 'it', 'to', 'of', 'and', 'or', 'in', 'on', 'at',
-            'with', 'by', 'from', 'for', 'was', 'were', 'he', 'she', 'they'
+            'the',
+            'a',
+            'an',
+            'is',
+            'it',
+            'to',
+            'of',
+            'and',
+            'or',
+            'in',
+            'on',
+            'at',
+            'with',
+            'by',
+            'from',
+            'for',
+            'was',
+            'were',
+            'he',
+            'she',
+            'they'
         ];
 
         foreach ($extractedSentences as $sentence) {
@@ -80,9 +98,9 @@ class ReviewerGenerator
                 $questionText = trim(preg_replace('/\s+/', ' ', $questionText));
 
                 if (!str_starts_with(trim($questionText), 'What')) {
-                     // If 'What' wasn't at the start, restructure it
-                     $questionText = 'What is the subject of the statement: "' . $sentence . '"';
-                     $keyWord = $keyWord; // The original keyword remains the answer
+                    // If 'What' wasn't at the start, restructure it
+                    $questionText = 'What is the subject of the statement: "' . $sentence . '"';
+                    $keyWord = $keyWord; // The original keyword remains the answer
                 } else {
                     // Simple replacement, ensure question ends with a question mark
                     $questionText = rtrim($questionText, '. ') . '?';

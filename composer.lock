@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "71e54c17835d38aa485d4cb5aaa8925b",
+    "content-hash": "d384368a69376a809a5f473f48ea9811",
     "packages": [
         {
             "name": "afaya/edge-tts",

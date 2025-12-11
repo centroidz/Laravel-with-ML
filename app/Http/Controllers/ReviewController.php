@@ -23,7 +23,7 @@ class ReviewController extends Controller
         // Add middleware here if needed, but it's already in web.php
     }
 
-        // Generate the audio using Edge TTS
+    // Generate the audio using Edge TTS
     public function generateAudio($id)
     {
         $reviewer = Reviewer::findOrFail($id);
@@ -36,7 +36,7 @@ class ReviewController extends Controller
         $randomName = Str::random(40); // e.g., 'aF3k9Lp...'
         $fileName = $randomName . '.mp3';
         $directory = public_path('audio');
-        
+
         // 2. Prepare paths
         $fullPath = $directory . '/' . $fileName;
         $dbPath = 'audio/' . $fileName; // Relative path for DB
@@ -47,16 +47,16 @@ class ReviewController extends Controller
 
         try {
             $tts = new EdgeTTS();
-            
+
             // 3. Generate Audio
             $tts->synthesize($reviewer->summary, 'en-US-GuyNeural', [
                 'outputFormat' => 'audio-24khz-48kbitrate-mono-mp3'
             ]);
-            
+
             // 4. Save file (Note: toFile adds extension if missing, but we added it manually to control it)
-            // Since we added .mp3 to $fileName, verify if library adds it again. 
+            // Since we added .mp3 to $fileName, verify if library adds it again.
             // Usually, toFile() just writes to the path provided.
-            $tts->toFile($directory . '/' . $randomName); 
+            $tts->toFile($directory . '/' . $randomName);
 
             // 5. Update Database
             $reviewer->audio_path = $dbPath;
@@ -89,46 +89,46 @@ class ReviewController extends Controller
         ]);
     }
 
-   // In App\Http\Controllers\ReviewController.php
+    // In App\Http\Controllers\ReviewController.php
 
-// Note: We change the type-hint from Reviewer $reviewer to the raw $id
+    // Note: We change the type-hint from Reviewer $reviewer to the raw $id
 // In App\Http\Controllers\ReviewController.php
 
-public function showReview($id)
-{
-    // Fetch the Reviewer model explicitly by ID
-    $reviewer = Reviewer::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+    public function showReview($id)
+    {
+        // Fetch the Reviewer model explicitly by ID
+        $reviewer = Reviewer::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
-    // 1. Policy check: Ensure the authenticated user owns this review
-    if (Auth::id() !== $reviewer->user_id) {
-        abort(403, 'Unauthorized action.');
+        // 1. Policy check: Ensure the authenticated user owns this review
+        if (Auth::id() !== $reviewer->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $questions = $reviewer->questions;
+
+        // 2. CRITICAL FIX: Ensure $questions is a PHP array, handling the casting failure.
+        if (is_string($questions)) {
+            // Decode the string, passing 'true' to ensure it's an associative array
+            $questions = json_decode($questions, true);
+        }
+
+        // Fallback: If decoding fails (e.g., corrupted JSON), ensure it's an empty array.
+        if (!is_array($questions)) {
+            $questions = [];
+        }
+
+        // 3. REMOVE dd($questions); <--- It must be removed to show the view!
+
+        return view('review.showResults', [
+            'reviewId' => $reviewer->id,
+            'summary' => $reviewer->summary,
+            'questions' => $questions, // GUARANTEED PHP ARRAY HERE
+            'original_text_length' => $reviewer->summary ? strlen($reviewer->summary) * 4 : 'N/A',
+            'saved' => true,
+            'is_show_view' => true,
+            'audio_path' => $reviewer->audio_path,
+        ]);
     }
-
-    $questions = $reviewer->questions;
-
-    // 2. CRITICAL FIX: Ensure $questions is a PHP array, handling the casting failure.
-    if (is_string($questions)) {
-        // Decode the string, passing 'true' to ensure it's an associative array
-        $questions = json_decode($questions, true);
-    }
-
-    // Fallback: If decoding fails (e.g., corrupted JSON), ensure it's an empty array.
-    if (!is_array($questions)) {
-        $questions = [];
-    }
-
-    // 3. REMOVE dd($questions); <--- It must be removed to show the view!
-
-    return view('review.showResults', [
-        'reviewId' => $reviewer->id,
-        'summary' => $reviewer->summary,
-        'questions' => $questions, // GUARANTEED PHP ARRAY HERE
-        'original_text_length' => $reviewer->summary ? strlen($reviewer->summary) * 4 : 'N/A',
-        'saved' => true,
-        'is_show_view' => true,
-        'audio_path' => $reviewer->audio_path,
-    ]);
-}
 
     /**
      * NEW: Deletes a saved review.
@@ -144,7 +144,7 @@ public function showReview($id)
         // We check if the 'audio_path' column is not empty
         if (!empty($reviewer->audio_path)) {
             $filePath = public_path($reviewer->audio_path);
-            
+
             // Check if the physical file exists on the server
             if (file_exists($filePath)) {
                 // Delete the file
@@ -166,65 +166,65 @@ public function showReview($id)
      */
 
     public function generateReview(Request $request, ReviewerGenerator $generator)
-{
-    // Ensure only authenticated users can save data
-    if (!Auth::check()) {
-        return redirect('/login')->with('error', 'Please log in to generate reviews.');
-    }
+    {
+        // Ensure only authenticated users can save data
+        if (!Auth::check()) {
+            return redirect('/login')->with('error', 'Please log in to generate reviews.');
+        }
 
-    // 1. Validate the input
-    $request->validate([
-        'input_text' => 'required|string|min:50'
-    ]);
+        // 1. Validate the input
+        $request->validate([
+            'input_text' => 'required|string|min:50'
+        ]);
 
-    $inputText = $request->input('input_text');
+        $inputText = $request->input('input_text');
 
-    // -----------------------------
-    // 2. CALL YOUR PYTHON AI MODEL
-    // -----------------------------
-    try {
-        // $response = Http::post('http://127.0.0.1:8000/summarize', [
-        //     'text' => $inputText
-        // ]);
-        $data = ['data' => [$inputText]];
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
+        // -----------------------------
+        // 2. CALL YOUR PYTHON AI MODEL
+        // -----------------------------
+        try {
+            // $response = Http::post('http://127.0.0.1:8000/summarize', [
+            //     'text' => $inputText
+            // ]);
+            $data = ['data' => [$inputText]];
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
             ])->post('https://jrsenobio-summarizer.hf.space/api/predict', $data);
 
-        $result = json_decode($response, true);
+            $result = json_decode($response, true);
 
-        if (!$response->successful()) {
-            return back()->with('error', 'AI Summarizer API returned an error.');
+            if (!$response->successful()) {
+                return back()->with('error', 'AI Summarizer API returned an error.');
+            }
+
+            $reviewerText = json_encode($result['data'][0]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to connect to AI Summarizer API: ' . $e->getMessage());
         }
-        
-        $reviewerText = json_encode($result['data'][0]);
 
-    } catch (\Exception $e) {
-        return back()->with('error', 'Failed to connect to AI Summarizer API: '.$e->getMessage());
+        // -----------------------------------------------------
+        // 3. Create questions (you can adjust based on summary)
+        // -----------------------------------------------------
+
+        $reviewerSentences = preg_split('/(?<=[.?!])\s+/', $reviewerText, -1, PREG_SPLIT_NO_EMPTY);
+        $questions = $generator->generateQuestions($reviewerSentences);
+
+        // 4. Store generated data in the session for later saving
+        Session::put('generated_review_data', [
+            'summary' => $reviewerText,
+            'questions' => $questions,
+            'original_text_length' => strlen($inputText),
+        ]);
+
+        // 5. Return results to the view
+        return view('review.results', [
+            'reviewer' => $reviewerText,
+            'questions' => $questions,
+            'original_text_length' => strlen($inputText),
+            'reviewId' => null,
+        ]);
     }
-
-    // -----------------------------------------------------
-    // 3. Create questions (you can adjust based on summary)
-    // -----------------------------------------------------
-
-    $reviewerSentences = preg_split('/(?<=[.?!])\s+/', $reviewerText, -1, PREG_SPLIT_NO_EMPTY);
-    $questions = $generator->generateQuestions($reviewerSentences);
-
-    // 4. Store generated data in the session for later saving
-    Session::put('generated_review_data', [
-        'summary' => $reviewerText,
-        'questions' => $questions,
-        'original_text_length' => strlen($inputText),
-    ]);
-
-    // 5. Return results to the view
-    return view('review.results', [
-        'reviewer' => $reviewerText,
-        'questions' => $questions,
-        'original_text_length' => strlen($inputText),
-        'reviewId' => null,
-    ]);
-}
 
     public function generateReview2(Request $request, ReviewerGenerator $generator)
     {
@@ -266,65 +266,6 @@ public function showReview($id)
         ]);
     }
 
-//     public function generateReview(Request $request, ReviewerGenerator $generator)
-// {
-//     // 1. Ensure only authenticated users can save data
-//     if (!Auth::check()) {
-//         return redirect('/login')->with('error', 'Please log in to generate reviews.');
-//     }
-
-//     // 2. Validate the input
-//     $request->validate([
-//         'input_text' => 'required|string|min:50',
-//         'sentence_count' => 'required|integer|min:1|max:20'
-//     ]);
-
-//     $inputText = $request->input('input_text');
-//     $count = $request->input('sentence_count');
-
-//     // 3. TRAINING DATA (temporary hard-coded)
-//     //    You can move this to database, JSON, or config.
-//     $trainingData = [
-//         ['sentence' => "Multimedia improves learning.", 'label' => 'important'],
-//         ['sentence' => "Students learn faster using videos and images.", 'label' => 'important'],
-//         ['sentence' => "Technology helps people work faster.", 'label' => 'important'],
-
-//         ['sentence' => "I like drinking coffee.", 'label' => 'not_important'],
-//         ['sentence' => "The sky is blue today.", 'label' => 'not_important'],
-//         ['sentence' => "I went to the store yesterday.", 'label' => 'not_important'],
-//     ];
-
-//     // 4. Create summarizer instance
-//     $summarizer = new TrainableSummarizer($trainingData);
-
-//     // 5. Generate summary using your new model
-//     $reviewerSentences = $summarizer->summarize($inputText);
-
-//     // If summary is too long, trim to requested count
-//     if (count($reviewerSentences) > $count) {
-//         $reviewerSentences = array_slice($reviewerSentences, 0, $count);
-//     }
-
-//     $reviewerText = implode(" ", $reviewerSentences);
-
-//     // 6. Generate questions based on summary (your old function)
-//     $questions = $generator->generateQuestions($reviewerSentences);
-
-//     // 7. Save to session
-//     Session::put('generated_review_data', [
-//         'summary' => $reviewerText,
-//         'questions' => $questions,
-//         'original_text_length' => strlen($inputText),
-//     ]);
-
-//     // 8. Return results to a view
-//     return view('review.results', [
-//         'reviewer' => $reviewerText,
-//         'questions' => $questions,
-//         'original_text_length' => strlen($inputText),
-//         'reviewId' => null,
-//     ]);
-// }
 
     /**
      * NEW: Retrieves data from the session and saves it to the database.
