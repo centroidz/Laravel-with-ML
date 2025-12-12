@@ -16,11 +16,11 @@ In today's fast-paced digital world, users are constantly faced with lengthy art
 | :--- | :--- |
 | **🌐 Web Application** | [**https://rereview.ccs-octa.com/**](https://rereview.ccs-octa.com/) |
 | **🖼️ Project Presentation** | [**View on Canva**](https://www.canva.com/design/DAG7KdYckIM/5mRxo-JJcCpsfIDtbu6apA/edit?utm_content=DAG7KdYckIM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
+| **▶️ Video Presentation** | [**Watch on YouTube**](https://www.youtube.com/watch?v=rxXk2a0TAY0) |
 
 ## 🛠️ Technology Stack
 
 Rereview is built using a robust combination of web framework and advanced natural language processing (NLP) libraries. 
-
 ### 💻 Web Application
 
 The front-end and back-end web application is powered by the following technology:
