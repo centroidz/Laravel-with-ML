@@ -21,6 +21,7 @@ In today's fast-paced digital world, users are constantly faced with lengthy art
 ## 🛠️ Technology Stack
 
 Rereview is built using a robust combination of web framework and advanced natural language processing (NLP) libraries. 
+
 ### 💻 Web Application
 
 The front-end and back-end web application is powered by the following technology:
@@ -48,6 +49,18 @@ These packages integrate the model's capabilities and enhance the user experienc
 
 * `afaya/edge-tts`: For text-to-speech functionality (allowing users to listen to the summary).
 * `nlp-tools/nlp-tools`: For general NLP utilities and text manipulation within the Laravel environment.
+
+---
+
+## 👨‍💻 Project Team
+
+The Rereview project was developed by the following team members:
+
+| Role | Name |
+| :--- | :--- |
+| **Lead Developer / Database Administrator** | Marc Ciejay Macaraig |
+| **Developer / System Administrator** | Julius Senobio |
+| **UI / UX Developer** | Limuel Amante |
 
 ---
 
